@@ -1,14 +1,43 @@
-// TODO: Define the LendingIterator trait
-// Requirements:
-// - Associated type Item with lifetime parameter
-// - Proper where clause
-// - next() method signature
-
+/// A lending iterator that yields references to items.
+///
+/// Unlike the standard `Iterator` trait, `LendingIterator` can yield
+/// items with lifetimes tied to the iterator itself, enabling patterns
+/// like sliding windows where returned slices borrow from internal state.
+///
+/// # Examples
+///
+/// ```
+/// use gat_iterator_framework::{LendingIterator, WindowIterator};
+///
+/// let data = vec![1, 2, 3, 4, 5];
+/// let mut windows = WindowIterator::new(&data, 3);
+///
+/// assert_eq!(windows.next(), Some(&[1, 2, 3][..]));
+/// assert_eq!(windows.next(), Some(&[2, 3, 4][..]));
+/// ```
 pub trait LendingIterator {
     type Item<'a> where Self: 'a;
     fn next(&mut self) -> Option<Self::Item<'_>>;
 }
 
+/// An iterator that yields overlapping windows of a fixed size over a slice.
+///
+/// Each call to `next()` advances the window by one position, creating
+/// overlapping views of the underlying data.
+///
+/// # Examples
+///
+/// ```
+/// use gat_iterator_framework::{LendingIterator, WindowIterator};
+///
+/// let data = vec![1, 2, 3, 4, 5];
+/// let mut windows = WindowIterator::new(&data, 3);
+///
+/// assert_eq!(windows.next(), Some(&[1, 2, 3][..]));
+/// assert_eq!(windows.next(), Some(&[2, 3, 4][..]));
+/// assert_eq!(windows.next(), Some(&[3, 4, 5][..]));
+/// assert_eq!(windows.next(), None);
+/// ```
 pub struct WindowIterator<'data, T> {
     data: &'data [T],      // Borrows the data
     position: usize,        // Current window start
