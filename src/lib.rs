@@ -29,7 +29,7 @@ impl<'data, T> LendingIterator for WindowIterator<'data, T> {
         //
         // Hint: Think about slice operations and when to return None
         let end = self.position + self.window_size;
-        if end > self.data.len() {
+        if end > self.data.len() || self.window_size == 0 {
             return None;
         }
 
@@ -61,10 +61,58 @@ mod tests {
         let data = vec![1, 3, 5, 7, 9];
         let mut win_iter = WindowIterator::new(&data, 3);
 
-        assert_eq!(win_iter.next(), Some(&data[0..3])); 
+        let first = win_iter.next(); 
+        let first_expected = Some(&data[0..3]);
+        assert_eq!(first, first_expected);
+
+        let first_pos = win_iter.position; 
+        assert_eq!(first_pos, 1);
+
         assert_eq!(win_iter.next(), Some(&data[1..4]));
+        assert_eq!(win_iter.position, 2);
+
         assert_eq!(win_iter.next(), Some(&data[2..5]));
+        assert_eq!(win_iter.position, 3);
+
         assert_eq!(win_iter.next(), None);
-        
+        assert_eq!(win_iter.position, 3);
+
+    }
+
+    #[test]
+    fn empty_data() {
+        let data: Vec<u32> = vec![];
+        let mut win_iter: WindowIterator<'_, u32> = WindowIterator::new(&data, 2);
+        assert_eq!(win_iter.next(), None);
+    }
+
+    #[test]
+    fn win_size_greater_than_data_len() {
+        let data = vec![1, 2];
+        let mut win_iter = WindowIterator::new(&data, 3);
+        assert_eq!(win_iter.next(), None);
+    }
+
+    #[test]
+    fn single_elem_window() {
+        // This test just checks the trait compiles
+        // We'll add real tests after implementing WindowIterator
+        let data = vec![1, 3, 5, 7, 9];
+        let mut win_iter = WindowIterator::new(&data, 1);
+
+        assert_eq!(win_iter.next(), Some(&data[0..1])); 
+        assert_eq!(win_iter.next(), Some(&data[1..2]));
+        assert_eq!(win_iter.next(), Some(&data[2..3]));
+        assert_eq!(win_iter.next(), Some(&data[3..4]));
+        assert_eq!(win_iter.next(), Some(&data[4..5]));
+
+        assert_eq!(win_iter.next(), None); 
+    }
+
+    #[test]
+    fn win_size_zero() {
+        let data = vec![1, 2];
+        let mut win_iter = WindowIterator::new(&data, 0);
+        assert_eq!(win_iter.next(), None);
     }
 } 
